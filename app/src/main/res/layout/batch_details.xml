@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/batchLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Batch 1"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/examNameEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Exam Name"
+        android:padding="8dp"
+        android:textColorHint="#B3B3B3"
+        android:textColor="#000000"
+        android:background="@drawable/rounded_edittext" />
+
+    <EditText
+        android:id="@+id/examDateEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Exam Date (YYYY-MM-DD)"
+        android:padding="8dp"
+        android:textColorHint="#B3B3B3"
+        android:textColor="#000000"
+        android:background="@drawable/rounded_edittext" />
+
+    <EditText
+        android:id="@+id/examTimeEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Exam Time (HH:MM AM/PM)"
+        android:padding="8dp"
+        android:textColorHint="#B3B3B3"
+        android:textColor="#000000"
+        android:background="@drawable/rounded_edittext" />
+
+</LinearLayout>

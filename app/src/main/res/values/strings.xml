@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Faculty Coupon QR</string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="Register">Register</string>
+    <string name="already_have_an_account">Already have an account?</string>
+    <string name="Login">Login</string>
+    <string name="Email">Email</string>
+    <string name="Password">Password</string>
+    <string name="forgot_passowrd">Forgot Passowrd?</string>
+    <string name="create_new_account">Create new account?</string>
+    <string name="logging">Login</string>
+    <string name="login_screen">Login Screen</string>
+    <string name="forgot_password">\n</string>
+    <string name="llogin">Login</string>
+    <string name="full_name">Full Name</string>
+    <string name="passwords">Password</string>
+    <string name="faculty_id">Faculty ID</string>
+</resources>

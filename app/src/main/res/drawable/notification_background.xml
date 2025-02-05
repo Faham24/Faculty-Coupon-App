@@ -1,0 +1,12 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="16dp" />
+    <solid android:color="#3AA8C1" />  <!-- Gold color for notifications -->
+    <padding
+        android:left="16dp"
+        android:right="16dp"
+        android:top="8dp"
+        android:bottom="8dp" />
+    <stroke
+        android:width="2dp"
+        android:color="#3AA8C1" />  <!-- Darker gold/orange border -->
+</shape>

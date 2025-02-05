@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        android:background="#121212">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Exam Name -->
+            <EditText
+                android:id="@+id/examNameEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Exam Name"
+                android:textColorHint="#B3B3B3"
+                android:background="@drawable/rounded_edittext"
+                android:padding="10dp"
+                android:textColor="@android:color/black"/>
+
+            <!-- Number of Batches -->
+            <EditText
+                android:id="@+id/numBatchesEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Number of Batches"
+                android:inputType="number"
+                android:textColorHint="#B3B3B3"
+                android:background="@drawable/rounded_edittext"
+                android:padding="10dp"
+                android:textColor="@android:color/black"/>
+
+            <!-- Exam Date -->
+            <EditText
+                android:id="@+id/examDateEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Exam Date (YYYY-MM-DD)"
+                android:textColorHint="#B3B3B3"
+                android:background="@drawable/rounded_edittext"
+                android:padding="10dp"
+                android:textColor="@android:color/black"/>
+
+            <!-- Exam Time -->
+            <EditText
+                android:id="@+id/examTimeEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Exam Time (HH:MM AM/PM)"
+                android:textColorHint="#B3B3B3"
+                android:background="@drawable/rounded_edittext"
+                android:padding="10dp"
+                android:textColor="@android:color/black"/>
+
+            <!-- Submit Button -->
+            <Button
+                android:id="@+id/submitExamDetailsButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Submit Exam Details"
+                android:textColor="#000000"
+                android:background="@drawable/rounded_buttonbg"
+                android:layout_marginTop="24dp"/>
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
