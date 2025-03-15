@@ -40,8 +40,8 @@ public interface ApiService {
     Call<ResponseBody> assignCoupon(@Body CouponRequest request);
 
 
-    @GET("/api/get_assigned_coupon")
-    Call<ResponseBody> getAssignedCoupon(@Query("faculty_id") String facultyId);
+    @GET("/api/get_assigned_coupons")
+    Call<AssignedCouponsResponse> getAssignedCoupons(@Query("faculty_id") String facultyId);
 
     @POST("/api/validate_coupon")
     Call<CouponResponse> validateCoupon(@Body CouponRequest couponRequest);
@@ -52,5 +52,10 @@ public interface ApiService {
     @POST("/api/generate_coupons")
     Call<ResponseBody> generateCoupons(@Body CouponGenerationRequest request);
 
+    @GET("api/get_coupon_history")
+    Call<List<CouponHistory>> getCouponHistory();
+
+    @GET("/api/faculty_coupon_status")
+    Call<CouponStatusResponse> getCouponStatus(@Query("faculty_id") String facultyId);
 
 }

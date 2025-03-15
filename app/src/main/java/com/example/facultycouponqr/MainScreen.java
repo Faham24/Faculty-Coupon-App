@@ -7,8 +7,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.zxing.BarcodeFormat;
@@ -16,9 +18,8 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
-import java.io.IOException;
+import java.util.List;
 
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -27,10 +28,9 @@ public class MainScreen extends AppCompatActivity {
 
     private ApiService apiService;
     private TextView couponStatusTextView;
-    private ImageView qrCodeImageView;
-
-    private Button manageExamButton, logoutButton;
-    private String facultyId;  // Variable to hold the faculty ID
+    private LinearLayout qrCodeContainer;
+    private Button generateCouponButton, logoutButton;
+    private String facultyId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,106 +39,66 @@ public class MainScreen extends AppCompatActivity {
 
         apiService = RetrofitClient.getClient().create(ApiService.class);
         couponStatusTextView = findViewById(R.id.couponStatus);
-        qrCodeImageView = findViewById(R.id.qrCodeImage);
+        qrCodeContainer = findViewById(R.id.qrCodeContainer);  // Container for multiple QR codes
 
-        // Retrieve faculty ID passed from LoginActivity
         facultyId = getIntent().getStringExtra("faculty_id");
-        Log.d("MainScreen", "Faculty ID received from LoginActivity: " + facultyId);
+        Log.d("MainScreen", "Faculty ID received: " + facultyId);
 
-        Button generateCouponButton = findViewById(R.id.generateCouponButton);
-        generateCouponButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                checkAssignedCoupon(facultyId);  // Check if a coupon is already assigned
-            }
-        });
+        generateCouponButton = findViewById(R.id.generateCouponButton);
+        generateCouponButton.setOnClickListener(v -> checkAssignedCoupons(facultyId));
 
-        manageExamButton = findViewById(R.id.manageExamButton);
-        manageExamButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainScreen.this, FacultyExamActivity.class);
-                intent.putExtra("faculty_id", facultyId);  // Pass faculty ID to FacultyExamActivity
-                startActivity(intent);
-            }
-        });
+        checkCouponStatus(facultyId);  // Call function to check coupon status
+
         logoutButton = findViewById(R.id.logoutButton);
-        logoutButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainScreen.this, LoginActivity.class);
-                startActivity(intent);
-            }
+        logoutButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainScreen.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
         });
     }
 
-    // Check if the faculty already has an assigned coupon
-    private void checkAssignedCoupon(String facultyId) {
-        Call<ResponseBody> call = apiService.getAssignedCoupon(facultyId); // API call to check coupon
+    // Check assigned coupons for the faculty
+    private void checkAssignedCoupons(String facultyId) {
+        Call<AssignedCouponsResponse> call = apiService.getAssignedCoupons(facultyId);
 
-        call.enqueue(new Callback<ResponseBody>() {
+        call.enqueue(new Callback<AssignedCouponsResponse>() {
             @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+            public void onResponse(Call<AssignedCouponsResponse> call, Response<AssignedCouponsResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    String couponCode = null;  // Parse coupon code from response
-                    try {
-                        couponCode = response.body().string();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    if (couponCode != null && !couponCode.isEmpty()) {
-                        // Display the existing coupon code
-                        couponStatusTextView.setText("Coupon Code: " + couponCode);
-                        generateQRCode(couponCode);  // Generate QR code for the existing coupon
+                    AssignedCouponsResponse assignedCouponsResponse = response.body();
+
+                    if (assignedCouponsResponse.isSuccess() && assignedCouponsResponse.getCouponCodes().size() > 0) {
+                        displayAssignedCoupons(assignedCouponsResponse.getCouponCodes());
                     } else {
-                        // No coupon assigned, generate a new one
-                        CouponRequest couponRequest = new CouponRequest(facultyId);
-                        generateCoupon(couponRequest);
+                        Toast.makeText(MainScreen.this, "No assigned coupons found!", Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(MainScreen.this, "Failed to check coupon assignment", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainScreen.this, "Failed to check assigned coupons!", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
+            public void onFailure(Call<AssignedCouponsResponse> call, Throwable t) {
                 Toast.makeText(MainScreen.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    // Method to send coupon generation request if no coupon is assigned
-    private void generateCoupon(CouponRequest couponRequest) {
-        Call<CouponResponse> call = apiService.generateCoupon(couponRequest);
+    // Display multiple assigned QR codes
+    private void displayAssignedCoupons(List<String> coupons) {
+        qrCodeContainer.removeAllViews(); // Clear previous QR codes
+        couponStatusTextView.setText("Assigned Coupons:");
 
-        call.enqueue(new Callback<CouponResponse>() {
-            @Override
-            public void onResponse(Call<CouponResponse> call, Response<CouponResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    CouponResponse couponResponse = response.body();
-                    if (couponResponse.isSuccess()) {
-                        // Display the generated coupon code
-                        String couponCode = couponResponse.getCouponCode();
-                        couponStatusTextView.setText("Coupon Generated: " + couponCode);
-                        generateQRCode(couponCode);  // Generate and display QR code
-                        Toast.makeText(MainScreen.this, "Coupon generated successfully!", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(MainScreen.this, "Failed to generate coupon: " + couponResponse.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(MainScreen.this, "Failed to generate coupon!", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<CouponResponse> call, Throwable t) {
-                Toast.makeText(MainScreen.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+        for (String couponCode : coupons) {
+            ImageView qrCodeImage = new ImageView(this);
+            qrCodeImage.setLayoutParams(new LinearLayout.LayoutParams(400, 400));
+            generateQRCode(couponCode, qrCodeImage);
+            qrCodeContainer.addView(qrCodeImage); // Add QR code to container
+        }
     }
 
-    // Method to generate QR code using ZXing
-    private void generateQRCode(String couponCode) {
+    // Generate QR code
+    private void generateQRCode(String couponCode, ImageView qrCodeImageView) {
         try {
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             BitMatrix bitMatrix = barcodeEncoder.encode(couponCode, BarcodeFormat.QR_CODE, 400, 400);
@@ -146,14 +106,42 @@ public class MainScreen extends AppCompatActivity {
 
             for (int x = 0; x < 400; x++) {
                 for (int y = 0; y < 400; y++) {
-                    bitmap.setPixel(x, y, bitMatrix.get(x, y) ? 0xFF000000 : 0xFFFFFFFF); // Black for QR code, white for background
+                    bitmap.setPixel(x, y, bitMatrix.get(x, y) ? 0xFF000000 : 0xFFFFFFFF);
                 }
             }
 
-            qrCodeImageView.setImageBitmap(bitmap);  // Display QR code in ImageView
+            qrCodeImageView.setImageBitmap(bitmap);
         } catch (WriterException e) {
             e.printStackTrace();
             Toast.makeText(this, "Failed to generate QR code", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    // Check coupon status using Retrofit
+    private void checkCouponStatus(String facultyId) {
+        Call<CouponStatusResponse> call = apiService.getCouponStatus(facultyId);
+
+        call.enqueue(new Callback<CouponStatusResponse>() {
+            @Override
+            public void onResponse(Call<CouponStatusResponse> call, Response<CouponStatusResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    String status = response.body().getStatus();
+                    if ("used".equals(status)) {
+                        generateCouponButton.setEnabled(false);
+                        generateCouponButton.setText("Coupon Already Used");
+                    } else {
+                        generateCouponButton.setEnabled(true);
+                        generateCouponButton.setText("Generate Coupon");
+                    }
+                } else {
+                    Toast.makeText(MainScreen.this, "Failed to fetch coupon status!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CouponStatusResponse> call, Throwable t) {
+                Toast.makeText(MainScreen.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

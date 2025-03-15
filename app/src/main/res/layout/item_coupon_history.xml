@@ -1,0 +1,42 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <TextView android:id="@+id/txtFacultyName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Faculty Name"
+        android:textStyle="bold"/>
+
+    <TextView android:id="@+id/txtDepartment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Department"/>
+
+    <TextView android:id="@+id/txtCouponCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Coupon Code"/>
+
+    <TextView android:id="@+id/txtCouponType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Coupon Type"/>
+
+    <TextView android:id="@+id/txtAssignedDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Assigned Date"/>
+
+    <TextView android:id="@+id/txtExamName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Exam Name"/>
+
+    <TextView android:id="@+id/txtExamTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Exam Time"/>
+</LinearLayout>

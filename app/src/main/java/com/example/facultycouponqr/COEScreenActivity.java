@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,25 +28,38 @@ import retrofit2.Response;
 
 public class COEScreenActivity extends AppCompatActivity {
 
-    private RecyclerView facultyDutiesRecyclerView;
+    private RecyclerView facultyDutiesRecyclerView, recyclerViewHistory;
     private FacultyDutiesAdapter adapter;
+    private CouponHistoryAdapter historyAdapter;
     private List<FacultyDuty> facultyDutyList;
     private Spinner departmentSpinner;
     private ApiService apiService;
-
-    private Button logout;
+    private Button logout, viewHistoryButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_coe_screen);
-        apiService = RetrofitClient.getClient().create(ApiService.class);
-        // Set up RecyclerView
-        facultyDutiesRecyclerView = findViewById(R.id.facultyDutiesRecyclerView);
-        facultyDutiesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Set up department dropdown (Spinner)
+        apiService = RetrofitClient.getClient().create(ApiService.class);
+
+        facultyDutiesRecyclerView = findViewById(R.id.facultyDutiesRecyclerView);
+        recyclerViewHistory = findViewById(R.id.recyclerViewHistory);
         departmentSpinner = findViewById(R.id.departmentSpinner);
+        logout = findViewById(R.id.logoutButton);
+        viewHistoryButton = findViewById(R.id.viewHistoryButton);
+
+        facultyDutiesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerViewHistory.setLayoutManager(new LinearLayoutManager(this));
+
+        logout.setOnClickListener(v -> {
+            Intent intent = new Intent(COEScreenActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+        });
+
+        viewHistoryButton.setOnClickListener(v -> fetchCouponHistory());
+
         List<String> departments = Arrays.asList(
                 "Electrical and Electronics Engineering",
                 "Mechanical Engineering",
@@ -60,56 +74,37 @@ public class COEScreenActivity extends AppCompatActivity {
                 "Artificial Intelligence and Data Science",
                 "Artificial Intelligence and Machine Learning"
         );
-        logout = findViewById(R.id.logoutButton);
-        logout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(COEScreenActivity.this,LoginActivity.class);
-                startActivity(intent);
-            }
-        });
 
-        // Spinner adapter
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, departments);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         departmentSpinner.setAdapter(spinnerAdapter);
 
-        // Handle department selection
         departmentSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, android.view.View view, int position, long id) {
-                String selectedDepartment = departments.get(position);
-                fetchFacultyDuties(selectedDepartment);  // Pass the selected department
+                fetchFacultyDuties(departments.get(position));
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Optionally handles the case where no department is selected
-            }
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        // Fetch initial duties for the first department
         fetchFacultyDuties(departments.get(0));
+        fetchCouponHistory();
     }
 
-
     private void fetchFacultyDuties(String department) {
-        ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
-
-        Call<List<FacultyDuty>> call = apiService.getInvigilationSchedule(department); // Pass department
+        Call<List<FacultyDuty>> call = apiService.getInvigilationSchedule(department);
 
         call.enqueue(new Callback<List<FacultyDuty>>() {
             @Override
             public void onResponse(Call<List<FacultyDuty>> call, Response<List<FacultyDuty>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     facultyDutyList = response.body();
-                    adapter = new FacultyDutiesAdapter(facultyDutyList, (facultyDuty, assignCouponButton) -> {
-                        // Call assignCoupon and pass the button
-                        assignCoupon(facultyDuty, assignCouponButton);
-                    });
+                    adapter = new FacultyDutiesAdapter(facultyDutyList, (facultyDuty, assignCouponButton) -> assignCoupon(facultyDuty, assignCouponButton));
                     facultyDutiesRecyclerView.setAdapter(adapter);
                 } else {
-                    Toast.makeText(COEScreenActivity.this, "Failed to fetch schedule", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(COEScreenActivity.this, "No unassigned faculty duties!", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -121,13 +116,19 @@ public class COEScreenActivity extends AppCompatActivity {
         });
     }
 
-    // Method to handle coupon assignment
     private void assignCoupon(FacultyDuty facultyDuty, Button assignCouponButton) {
         String facultyId = facultyDuty.getFacultyId();
-        String couponType = "Lunch";
+        String examName = facultyDuty.getExamName();
+        String examTime = facultyDuty.getExamTime();
 
-        ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
-        Call<ResponseBody> call = apiService.assignCoupon(new CouponRequest(facultyId, couponType));
+        if (facultyId == null || facultyId.isEmpty() || examName == null || examName.isEmpty() || examTime == null || examTime.isEmpty()) {
+            Toast.makeText(COEScreenActivity.this, "Invalid faculty/exam details!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String couponType = examTime.contains("Morning") ? "Morning" : "Lunch";
+
+        Call<ResponseBody> call = apiService.assignCoupon(new CouponRequest(facultyId, couponType, examName, examTime));
 
         call.enqueue(new Callback<ResponseBody>() {
             @Override
@@ -138,12 +139,12 @@ public class COEScreenActivity extends AppCompatActivity {
                         JSONObject jsonResponse = new JSONObject(responseBody);
                         String couponCode = jsonResponse.optString("coupon_code");
 
-                        Toast.makeText(COEScreenActivity.this, "Coupon assigned successfully!\nCode: " + couponCode, Toast.LENGTH_LONG).show();
+                        Toast.makeText(COEScreenActivity.this, "Coupon Assigned: " + couponCode, Toast.LENGTH_LONG).show();
                         assignCouponButton.setText("Coupon Assigned: " + couponCode);
                         fetchFacultyDuties(departmentSpinner.getSelectedItem().toString());
 
                     } catch (IOException | JSONException e) {
-                        Log.e("COEActivity", "Error parsing response: " + e.getMessage());
+                        Log.e("COEActivity", "Response Parsing Error: " + e.getMessage());
                     }
                 } else {
                     try {
@@ -163,4 +164,28 @@ public class COEScreenActivity extends AppCompatActivity {
         });
     }
 
+    private void fetchCouponHistory() {
+        Call<List<CouponHistory>> call = apiService.getCouponHistory();
+
+        call.enqueue(new Callback<List<CouponHistory>>() {
+            @Override
+            public void onResponse(Call<List<CouponHistory>> call, Response<List<CouponHistory>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    displayCouponHistory(response.body());
+                } else {
+                    Toast.makeText(COEScreenActivity.this, "Failed to fetch history", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<CouponHistory>> call, Throwable t) {
+                Toast.makeText(COEScreenActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void displayCouponHistory(List<CouponHistory> historyList) {
+        historyAdapter = new CouponHistoryAdapter(historyList);
+        recyclerViewHistory.setAdapter(historyAdapter);
+    }
 }

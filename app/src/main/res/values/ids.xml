@@ -23,4 +23,5 @@
     <item name="viewHistoryButton" type="id" />
     <item name="announcementTextView" type="id" />
     <item name="announcementCard" type="id" />
+    <item name="qrCodeImage" type="id" />
 </resources>

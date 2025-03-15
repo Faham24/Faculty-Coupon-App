@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -25,6 +27,8 @@ public class HODManagementActivity extends AppCompatActivity {
 
     private String facultyId;
 
+    Button logout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,10 +36,21 @@ public class HODManagementActivity extends AppCompatActivity {
 
         facultyRecyclerView = findViewById(R.id.facultyRecyclerView);
         facultyRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        logout = findViewById(R.id.logoutButton);
+        logout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(HODManagementActivity.this,LoginActivity.class);
+                startActivity(intent);
+                finish();
+
+            }
+        });
 
         // Fetch faculty list from the backend
         fetchFacultyList();
     }
+
 
     private void fetchFacultyList() {
         // Retrieve department from SharedPreferences
